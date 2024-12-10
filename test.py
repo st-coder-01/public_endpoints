@@ -67,7 +67,9 @@ def fetch_key_vault_status(subscription_id):
                 check=True
             )
             vault_details = json.loads(net_result.stdout)
-            public_access = vault_details.get("properties", {}).get("networkAcls", {}).get("defaultAction", "Unknown")
+            properties = vault_details.get("properties", {})
+            network_acls = properties.get("networkAcls", {}) if isinstance(properties, dict) else {}
+            public_access = network_acls.get("defaultAction", "Unknown")
 
             report.append({"name": name, "resource_group": resource_group, "public_access": public_access})
 
@@ -109,7 +111,7 @@ def fetch_function_app_status(subscription_id):
         return []
 
 def main():
-    subscription_id = "d8eaebd9-e25f-48b1-b7fe-95d296133cfa"  # Replace with your Azure subscription ID
+    subscription_id = "your_subscription_id"  # Replace with your Azure subscription ID
 
     # Fetch statuses
     storage_report = fetch_storage_account_status(subscription_id)
