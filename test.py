@@ -111,7 +111,7 @@ def fetch_function_app_status(subscription_id):
         return []
 
 def main():
-    subscription_id = "your_subscription_id"  # Replace with your Azure subscription ID
+    subscription_id = "d8eaebd9-e25f-48b1-b7fe-95d296133cfa"  # Replace with your Azure subscription ID
 
     # Fetch statuses
     storage_report = fetch_storage_account_status(subscription_id)
