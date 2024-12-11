@@ -68,9 +68,9 @@ def fetch_key_vault_status(subscription_id):
             )
             vault_details = json.loads(net_result.stdout)
             print("\n", vault, ": ", vault_details)
-            # properties = vault_details.get("properties", {})
+            properties = vault_details.get("properties", {})
             # network_acls = properties.get("networkAcls", {}) if isinstance(properties, dict) else {}
-            public_access = vault_details.get("publicNetworkAccess", "Unknown")
+            public_access = properties.get("publicNetworkAccess", "Unknown")
 
             report.append({"name": name, "resource_group": resource_group, "public_access": public_access})
 
