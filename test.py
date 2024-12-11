@@ -99,10 +99,17 @@ def fetch_function_app_status(subscription_id):
             name = app["name"]
             resource_group = app["resourceGroup"]
 
-            # Get public network access setting (if applicable)
-            app_details = {"name": name, "resource_group": resource_group, "public_access": "N/A"}  # Function apps don't have a direct public access setting
+            # Get public network access setting
+            net_result = subprocess.run(
+                ["az", "functionapp", "show", "--name", name, "--resource-group", resource_group, "-o", "json"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            app_details = json.loads(net_result.stdout)
+            public_access = app_details.get("properties", {}).get("publicNetworkAccess", "Unknown")
 
-            report.append(app_details)
+            report.append({"name": name, "resource_group": resource_group, "public_access": public_access})
 
         return report
 
