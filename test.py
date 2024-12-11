@@ -107,8 +107,7 @@ def fetch_function_app_status(subscription_id):
                 check=True
             )
             app_details = json.loads(net_result.stdout)
-            print("\n",app, ": \n",app_details)
-            public_access = app_details.get("properties", {}).get("publicNetworkAccess", "Unknown")
+            public_access = app_details.get("publicNetworkAccess", "Unknown")
 
             report.append({"name": name, "resource_group": resource_group, "public_access": public_access})
 
