@@ -116,6 +116,44 @@ def fetch_function_app_status(subscription_id):
         print(f"Error occurred: {e.stderr}")
         return []
 
+# Fetch Redis cache details
+def fetch_redis_status(subscription_id):
+    try:
+        # Set Azure subscription
+        subprocess.run(["az", "account", "set", "--subscription", subscription_id], check=True)
+
+        # Get list of Redis caches
+        result = subprocess.run(
+            ["az", "redis", "list", "--query", "[].{name:name,resourceGroup:resourceGroup}", "-o", "json"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        redis_caches = json.loads(result.stdout)
+
+        report = []
+        for cache in redis_caches:
+            name = cache["name"]
+            resource_group = cache["resourceGroup"]
+
+            # Get enableNonSslPort setting
+            net_result = subprocess.run(
+                ["az", "redis", "show", "--name", name, "--resource-group", resource_group, "-o", "json"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            cache_details = json.loads(net_result.stdout)
+            enable_non_ssl_port = cache_details.get("enableNonSslPort", "Unknown")
+
+            report.append({"name": name, "resource_group": resource_group, "enable_non_ssl_port": enable_non_ssl_port})
+
+        return report
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e.stderr}")
+        return []
+
 def main():
     subscription_id = "d8eaebd9-e25f-48b1-b7fe-95d296133cfa"  # Replace with your Azure subscription ID
 
@@ -123,6 +161,7 @@ def main():
     storage_report = fetch_storage_account_status(subscription_id)
     key_vault_report = fetch_key_vault_status(subscription_id)
     function_app_report = fetch_function_app_status(subscription_id)
+    redis_report = fetch_redis_status(subscription_id)
 
     # Print reports
     print("\nStorage Account Public Access Report:")
@@ -141,6 +180,12 @@ def main():
     for entry in function_app_report:
         print(
             f"Function App: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
+        )
+
+    print("\nRedis Cache Report:")
+    for entry in redis_report:
+        print(
+            f"Redis Cache: {entry['name']}, Resource Group: {entry['resource_group']}, Enable Non-SSL Port: {entry['enable_non_ssl_port']}"
         )
 
 if __name__ == "__main__":
