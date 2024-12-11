@@ -67,9 +67,10 @@ def fetch_key_vault_status(subscription_id):
                 check=True
             )
             vault_details = json.loads(net_result.stdout)
-            properties = vault_details.get("properties", {})
-            network_acls = properties.get("networkAcls", {}) if isinstance(properties, dict) else {}
-            public_access = network_acls.get("defaultAction", "Unknown")
+            print("\n", vault, ": ", vault_details)
+            # properties = vault_details.get("properties", {})
+            # network_acls = properties.get("networkAcls", {}) if isinstance(properties, dict) else {}
+            public_access = vault_details.get("publicNetworkAccess", "Unknown")
 
             report.append({"name": name, "resource_group": resource_group, "public_access": public_access})
 
@@ -122,7 +123,7 @@ def main():
 
     # Fetch statuses
     storage_report = fetch_storage_account_status(subscription_id)
-    # key_vault_report = fetch_key_vault_status(subscription_id)
+    key_vault_report = fetch_key_vault_status(subscription_id)
     function_app_report = fetch_function_app_status(subscription_id)
 
     # Print reports
@@ -132,11 +133,11 @@ def main():
             f"Storage Account: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
         )
 
-    # print("\nKey Vault Public Access Report:")
-    # for entry in key_vault_report:
-    #     print(
-    #         f"Key Vault: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
-    #     )
+    print("\nKey Vault Public Access Report:")
+    for entry in key_vault_report:
+        print(
+            f"Key Vault: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
+        )
 
     print("\nFunction App Report:")
     for entry in function_app_report:
