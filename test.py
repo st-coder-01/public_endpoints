@@ -1,5 +1,7 @@
 import subprocess
 import json
+import sendgrid
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 # Fetch storage account details
 def fetch_storage_account_status(subscription_id):
@@ -154,39 +156,85 @@ def fetch_redis_status(subscription_id):
         print(f"Error occurred: {e.stderr}")
         return []
 
-def main():
-    subscription_id = "d8eaebd9-e25f-48b1-b7fe-95d296133cfa"  # Replace with your Azure subscription ID
+# Send email using SendGrid
+def send_email_with_sendgrid(api_key, sender_email, recipient_email, subject, content_body):
+    try:
+        sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        
+        # Create the email message
+        from_email = Email(sender_email)  # Verified sender email
+        to_email = To(recipient_email)    # Recipient email
+        subject = subject
+        content = Content("text/plain", content_body)
+        
+        mail = Mail(from_email, to_email, subject, content)
+        
+        # Send the email
+        response = sg.client.mail.send.post(request_body=mail.get())
+        
+        print("Email sent successfully!")
+        print(f"Status Code: {response.status_code}")
+        print(f"Body: {response.body}")
+        print(f"Headers: {response.headers}")
+    
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
 
-    # Fetch statuses
-    storage_report = fetch_storage_account_status(subscription_id)
-    key_vault_report = fetch_key_vault_status(subscription_id)
-    function_app_report = fetch_function_app_status(subscription_id)
-    redis_report = fetch_redis_status(subscription_id)
+# Generate the report content
+def generate_report_content(storage_report, key_vault_report, function_app_report, redis_report):
+    report_lines = ["Azure Report Summary:\n"]
 
-    # Print reports
-    print("\nStorage Account Public Access Report:")
+    # Storage Account Report
+    report_lines.append("Storage Account Public Access Report:")
     for entry in storage_report:
-        print(
+        report_lines.append(
             f"Storage Account: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
         )
 
-    print("\nKey Vault Public Access Report:")
+    # Key Vault Report
+    report_lines.append("\nKey Vault Public Access Report:")
     for entry in key_vault_report:
-        print(
+        report_lines.append(
             f"Key Vault: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
         )
 
-    print("\nFunction App Report:")
+    # Function App Report
+    report_lines.append("\nFunction App Report:")
     for entry in function_app_report:
-        print(
+        report_lines.append(
             f"Function App: {entry['name']}, Resource Group: {entry['resource_group']}, Public Access: {entry['public_access']}"
         )
 
-    print("\nRedis Cache Report:")
+    # Redis Cache Report
+    report_lines.append("\nRedis Cache Report:")
     for entry in redis_report:
-        print(
+        report_lines.append(
             f"Redis Cache: {entry['name']}, Resource Group: {entry['resource_group']}, Enable Non-SSL Port: {entry['enable_non_ssl_port']}"
         )
+
+    return "\n".join(report_lines)
+
+# Main function
+def main():
+    parser = argparse.ArgumentParser(description="Fetch Azure resource details and send an email report.")
+    parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
+    parser.add_argument("--sendgrid-api-key", required=True, help="SendGrid API key")
+    parser.add_argument("--sender-email", required=True, help="Sender email address")
+    parser.add_argument("--recipient-email", required=True, help="Recipient email address")
+
+    args = parser.parse_args()
+
+    # Fetch statuses
+    storage_report = fetch_storage_account_status(args.subscription_id)
+    key_vault_report = fetch_key_vault_status(args.subscription_id)
+    function_app_report = fetch_function_app_status(args.subscription_id)
+    redis_report = fetch_redis_status(args.subscription_id)
+
+    # Generate report content
+    email_content = generate_report_content(storage_report, key_vault_report, function_app_report, redis_report)
+
+    # Send the email
+    send_email_with_sendgrid(args.sendgrid_api_key, args.sender_email, args.recipient_email, "Azure Resource Report", email_content)
 
 if __name__ == "__main__":
     main()
