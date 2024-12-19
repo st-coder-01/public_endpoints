@@ -231,6 +231,8 @@ def main():
     function_app_report = fetch_function_app_status(args.subscription_id)
     redis_report = fetch_redis_status(args.subscription_id)
 
+    print("Storage Account: \n", storage_report)
+
     # Generate report content
     email_content = generate_report_content(storage_report, key_vault_report, function_app_report, redis_report)
 
