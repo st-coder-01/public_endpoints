@@ -147,7 +147,7 @@ def fetch_redis_status(subscription_id):
         return []
 
 # Generate the report content with properly aligned tables
-def generate_report_content_html(storage_report, key_vault_report, function_app_report, redis_report):
+def generate_report_content(storage_report, key_vault_report, function_app_report, redis_report):
     def create_html_table(rows, headers):
         # Start table with headers
         html = "<table border='1' style='border-collapse: collapse; text-align: left;'>"
