@@ -150,11 +150,19 @@ def fetch_redis_status(subscription_id):
 def generate_report_content(storage_report, key_vault_report, function_app_report, redis_report):
     report_lines = ["Azure Report Summary:\n"]
 
+    # Define a helper function for alignment
+    def format_table(rows, headers):
+        col_widths = [max(len(str(row[i])) for row in rows + [headers]) for i in range(len(headers))]
+        header_line = " | ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers)))
+        separator = "-+-".join("-" * col_width for col_width in col_widths)
+        rows_lines = [" | ".join(f"{str(row[i]):<{col_widths[i]}}" for i in range(len(headers))) for row in rows]
+        return f"{header_line}\n{separator}\n" + "\n".join(rows_lines)
+
     # Storage Account Report
     if storage_report:
         storage_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in storage_report]
         report_lines.append("Storage Account Public Access Report:")
-        report_lines.append(tabulate(storage_table, headers=["Name", "Resource Group", "Public Access"], tablefmt="plain"))
+        report_lines.append(format_table(storage_table, ["Name", "Resource Group", "Public Access"]))
     else:
         report_lines.append("No Storage Accounts found.\n")
 
@@ -162,7 +170,7 @@ def generate_report_content(storage_report, key_vault_report, function_app_repor
     if key_vault_report:
         key_vault_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in key_vault_report]
         report_lines.append("\nKey Vault Public Access Report:")
-        report_lines.append(tabulate(key_vault_table, headers=["Name", "Resource Group", "Public Access"], tablefmt="plain"))
+        report_lines.append(format_table(key_vault_table, ["Name", "Resource Group", "Public Access"]))
     else:
         report_lines.append("No Key Vaults found.\n")
 
@@ -170,7 +178,7 @@ def generate_report_content(storage_report, key_vault_report, function_app_repor
     if function_app_report:
         function_app_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in function_app_report]
         report_lines.append("\nFunction App Report:")
-        report_lines.append(tabulate(function_app_table, headers=["Name", "Resource Group", "Public Access"], tablefmt="plain"))
+        report_lines.append(format_table(function_app_table, ["Name", "Resource Group", "Public Access"]))
     else:
         report_lines.append("No Function Apps found.\n")
 
@@ -178,7 +186,7 @@ def generate_report_content(storage_report, key_vault_report, function_app_repor
     if redis_report:
         redis_table = [[entry["name"], entry["resource_group"], entry["enable_non_ssl_port"]] for entry in redis_report]
         report_lines.append("\nRedis Cache Report:")
-        report_lines.append(tabulate(redis_table, headers=["Name", "Resource Group", "Enable Non-SSL Port"], tablefmt="plain"))
+        report_lines.append(format_table(redis_table, ["Name", "Resource Group", "Enable Non-SSL Port"]))
     else:
         report_lines.append("No Redis Caches found.\n")
 
