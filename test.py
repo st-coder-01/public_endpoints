@@ -147,50 +147,52 @@ def fetch_redis_status(subscription_id):
         return []
 
 # Generate the report content with properly aligned tables
-def generate_report_content(storage_report, key_vault_report, function_app_report, redis_report):
-    report_lines = ["Azure Report Summary:\n"]
+def generate_report_content_html(storage_report, key_vault_report, function_app_report, redis_report):
+    def create_html_table(rows, headers):
+        # Start table with headers
+        html = "<table border='1' style='border-collapse: collapse; text-align: left;'>"
+        html += "<tr>" + "".join(f"<th style='padding: 8px;'>{header}</th>" for header in headers) + "</tr>"
+        # Add rows
+        for row in rows:
+            html += "<tr>" + "".join(f"<td style='padding: 8px;'>{cell}</td>" for cell in row) + "</tr>"
+        html += "</table>"
+        return html
 
-    # Define a helper function for alignment
-    def format_table(rows, headers):
-        col_widths = [max(len(str(row[i])) for row in rows + [headers]) for i in range(len(headers))]
-        header_line = " | ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers)))
-        separator = "-+-".join("-" * col_width for col_width in col_widths)
-        rows_lines = [" | ".join(f"{str(row[i]):<{col_widths[i]}}" for i in range(len(headers))) for row in rows]
-        return f"{header_line}\n{separator}\n" + "\n".join(rows_lines)
+    report_html = "<h2>Azure Report Summary</h2>"
 
     # Storage Account Report
     if storage_report:
         storage_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in storage_report]
-        report_lines.append("Storage Account Public Access Report:")
-        report_lines.append(format_table(storage_table, ["Name", "Resource Group", "Public Access"]))
+        report_html += "<h3>Storage Account Public Access Report:</h3>"
+        report_html += create_html_table(storage_table, ["Name", "Resource Group", "Public Access"])
     else:
-        report_lines.append("No Storage Accounts found.\n")
+        report_html += "<p>No Storage Accounts found.</p>"
 
     # Key Vault Report
     if key_vault_report:
         key_vault_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in key_vault_report]
-        report_lines.append("\nKey Vault Public Access Report:")
-        report_lines.append(format_table(key_vault_table, ["Name", "Resource Group", "Public Access"]))
+        report_html += "<h3>Key Vault Public Access Report:</h3>"
+        report_html += create_html_table(key_vault_table, ["Name", "Resource Group", "Public Access"])
     else:
-        report_lines.append("No Key Vaults found.\n")
+        report_html += "<p>No Key Vaults found.</p>"
 
     # Function App Report
     if function_app_report:
         function_app_table = [[entry["name"], entry["resource_group"], entry["public_access"]] for entry in function_app_report]
-        report_lines.append("\nFunction App Report:")
-        report_lines.append(format_table(function_app_table, ["Name", "Resource Group", "Public Access"]))
+        report_html += "<h3>Function App Report:</h3>"
+        report_html += create_html_table(function_app_table, ["Name", "Resource Group", "Public Access"])
     else:
-        report_lines.append("No Function Apps found.\n")
+        report_html += "<p>No Function Apps found.</p>"
 
     # Redis Cache Report
     if redis_report:
         redis_table = [[entry["name"], entry["resource_group"], entry["enable_non_ssl_port"]] for entry in redis_report]
-        report_lines.append("\nRedis Cache Report:")
-        report_lines.append(format_table(redis_table, ["Name", "Resource Group", "Enable Non-SSL Port"]))
+        report_html += "<h3>Redis Cache Report:</h3>"
+        report_html += create_html_table(redis_table, ["Name", "Resource Group", "Enable Non-SSL Port"])
     else:
-        report_lines.append("No Redis Caches found.\n")
+        report_html += "<p>No Redis Caches found.</p>"
 
-    return "\n".join(report_lines)
+    return report_html
 
 # Send email using SendGrid
 def send_email_with_sendgrid(api_key, sender_email, recipient_email, subject, content_body):
