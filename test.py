@@ -3,7 +3,7 @@ import json
 import argparse
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content
-from tabulate import tabulate  # Ensure this library is installed: pip install tabulate
+from tabulate import tabulate
 
 # Fetch storage account details
 def fetch_storage_account_status(subscription_id):
@@ -210,7 +210,7 @@ def send_email_with_sendgrid(api_key, sender_email, recipient_email, subject, ht
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         from_email = Email(sender_email)
         to_email = To(recipient_email)
-        content = Content("text/html", html_content)  # Changed to "text/html" for HTML content
+        content = Content("text/html", html_content)
         mail = Mail(from_email, to_email, subject, content)
         sg.client.mail.send.post(request_body=mail.get())
         print("Email sent successfully!")
@@ -239,7 +239,7 @@ def main():
         sender_email=args.sender_email,
         recipient_email=args.recipient_email,
         subject="Azure Resource Report",
-        html_content=email_content,  # Pass HTML content
+        html_content=email_content, 
     )
 
 if __name__ == "__main__":
