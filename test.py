@@ -195,12 +195,22 @@ def generate_report_content(storage_report, key_vault_report, function_app_repor
     return report_html
 
 # Send email using SendGrid
-def send_email_with_sendgrid(api_key, sender_email, recipient_email, subject, content_body):
+def send_email_with_sendgrid(api_key, sender_email, recipient_email, subject, html_content):
+    """
+    Sends an HTML email using SendGrid.
+    
+    Parameters:
+        api_key (str): SendGrid API key.
+        sender_email (str): Sender's email address.
+        recipient_email (str): Recipient's email address.
+        subject (str): Email subject.
+        html_content (str): HTML content for the email body.
+    """
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         from_email = Email(sender_email)
         to_email = To(recipient_email)
-        content = Content("text/plain", content_body)
+        content = Content("text/html", html_content)  # Changed to "text/html" for HTML content
         mail = Mail(from_email, to_email, subject, content)
         sg.client.mail.send.post(request_body=mail.get())
         print("Email sent successfully!")
@@ -222,8 +232,15 @@ def main():
     function_app_report = fetch_function_app_status(args.subscription_id)
     redis_report = fetch_redis_status(args.subscription_id)
 
+    # Generate HTML email content
     email_content = generate_report_content(storage_report, key_vault_report, function_app_report, redis_report)
-    send_email_with_sendgrid(args.sendgrid_api_key, args.sender_email, args.recipient_email, "Azure Resource Report", email_content)
+    send_email_with_sendgrid(
+        api_key=args.sendgrid_api_key,
+        sender_email=args.sender_email,
+        recipient_email=args.recipient_email,
+        subject="Azure Resource Report",
+        html_content=email_content,  # Pass HTML content
+    )
 
 if __name__ == "__main__":
     main()
